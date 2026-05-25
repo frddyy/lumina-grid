@@ -61,14 +61,14 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       <AnimatePresence>
         {isChatModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsChatModalOpen(false)}
               className="absolute inset-0 pointer-events-auto"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -84,7 +84,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
                     <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest">Active Analysis</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsChatModalOpen(false)}
                   className="p-2 hover:bg-white/5 rounded-full text-zinc-500 transition-colors"
                   aria-label="Close"
@@ -105,46 +105,64 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
                   </div>
                 )}
                 {chatHistory.map((chat, i) => (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    key={i} 
+                    key={i}
                     className={`flex flex-col ${chat.role === 'user' ? 'items-end' : 'items-start'}`}
                   >
-                    <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${
-                      chat.role === 'user' 
-                      ? 'bg-amber-500/20 text-amber-100 rounded-tr-none' 
-                      : 'bg-white/5 text-zinc-400 rounded-tl-none border border-white/5'
-                    }`}>
+                    <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${chat.role === 'user'
+                        ? 'bg-amber-500/20 text-amber-100 rounded-tr-none'
+                        : 'bg-white/5 text-zinc-400 rounded-tl-none border border-white/5'
+                      }`}>
                       {formatMarkdown(chat.text, chat.role === 'user')}
-                      
+
                       {chat.status && (
-                        <div className={`mt-2 pt-2 border-t border-white/5 font-mono text-[9px] uppercase tracking-widest flex items-center gap-1.5 ${
-                          chat.status === 'approved' ? 'text-emerald-500' : 'text-zinc-500'
-                        }`}>
+                        <div className={`mt-2 pt-2 border-t border-white/5 font-mono text-[9px] uppercase tracking-widest flex items-center gap-1.5 ${chat.status === 'approved' ? 'text-emerald-500' : 'text-zinc-500'
+                          }`}>
                           {chat.status === 'approved' ? <ShieldCheck size={10} /> : <X size={10} />}
                           <span>Action: {chat.status === 'approved' ? 'Approved' : 'Rejected'}</span>
                         </div>
                       )}
                     </div>
-                    
+
                     {((chat.action === 'reroute' || chat.action === 'isolate') || (chat.mitigationPlan && chat.mitigationPlan.length > 0)) && !chat.status && (
                       <div className="mt-3 w-full max-w-[85%] p-3 glass-card bg-white/[0.03] border border-white/10 rounded-xl">
                         <p className="text-[10px] text-zinc-400 mb-2 uppercase tracking-widest font-mono">Suggested Action</p>
+
+                        {/* --- TAMBAHAN UX: Rincian Detail Batch Action --- */}
+                        {chat.mitigationPlan && chat.mitigationPlan.length > 1 && (
+                          <div className="mb-3 space-y-2 border-b border-white/10 pb-3">
+                            {chat.mitigationPlan.map((plan, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-xs font-mono">
+                                <div className={`w-1.5 h-1.5 rounded-full ${plan.action === 'isolate' ? 'bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.5)]' : 'bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)]'
+                                  }`}></div>
+                                <span className="text-zinc-300">
+                                  <strong className={plan.action === 'isolate' ? 'text-rose-400' : 'text-amber-400'}>
+                                    {plan.action.toUpperCase()}
+                                  </strong>
+                                  <span className="text-zinc-500 mx-1.5">on</span>
+                                  <span className="text-white tracking-wider">{plan.unitId}</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {/* ------------------------------------------------ */}
+
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={() => handleReroute(i)}
                             disabled={isExecutingAction === i}
-                            className={`flex-1 py-2 px-2 text-black rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-                              chat.mitigationPlan && chat.mitigationPlan.length > 1 ? 'bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)]' :
-                              chat.action === 'isolate' ? 'bg-rose-500 hover:bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'bg-amber-500 hover:bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                            } disabled:opacity-50`}
+                            className={`flex-1 py-2 px-2 text-black rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${chat.mitigationPlan && chat.mitigationPlan.length > 1 ? 'bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)]' :
+                                chat.action === 'isolate' ? 'bg-rose-500 hover:bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'bg-amber-500 hover:bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                              } disabled:opacity-50`}
                           >
-                            {chat.mitigationPlan && chat.mitigationPlan.length > 1 
+                            {chat.mitigationPlan && chat.mitigationPlan.length > 1
                               ? `⚡️ Execute Batch Mitigation (${chat.mitigationPlan.length} Actions)`
                               : `⚡️ Execute ${chat.action} ${chat.actionUnit && `on ${chat.actionUnit}`}`}
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleRejectAction(i)}
                             disabled={isExecutingAction === i}
                             className="py-2 px-3 bg-white/5 border border-white/10 text-zinc-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors disabled:opacity-50"
@@ -159,9 +177,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
                 {isTyping && (
                   <div className="flex flex-col items-start">
                     <div className="bg-white/5 text-zinc-500 px-4 py-3 rounded-2xl text-[11px] rounded-tl-none border border-white/5 italic flex items-center gap-2">
-                       <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce" />
-                       <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce [animation-delay:0.2s]" />
-                       <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+                      <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce" />
+                      <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce [animation-delay:0.4s]" />
                     </div>
                   </div>
                 )}
@@ -170,7 +188,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
 
               <div className="p-6 border-t border-white/5 bg-white/[0.01] pb-safe md:pb-8">
                 <div className="relative group mb-1 md:mb-0">
-                  <textarea 
+                  <textarea
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
                     onKeyDown={(e) => {
@@ -183,7 +201,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
                     rows={2}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-4 pr-12 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-600 resize-none custom-scrollbar"
                   />
-                  <button 
+                  <button
                     onClick={handleSendChat}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-amber-500 hover:text-amber-400 transition-colors"
                     aria-label="Send"
@@ -198,7 +216,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       </AnimatePresence>
 
       <div className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-50 pointer-events-none">
-        <button 
+        <button
           onClick={() => setIsChatModalOpen(!isChatModalOpen)}
           className="pointer-events-auto w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center text-black shadow-[0_8px_32px_rgba(245,158,11,0.3)] hover:scale-110 active:scale-95 transition-all relative overflow-hidden group"
           aria-label="Toggle AI Assistant"

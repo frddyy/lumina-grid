@@ -22,10 +22,15 @@ Wrapped in a meticulously crafted, premium Apple Pro glassmorphism aesthetic, Lu
 *   🛡 **Intentional Friction Confirmation Modals**: To prevent unsafe load balancing operations, all critical actions now trigger an explicit confirmation overlay, demanding human oversight before altering grid variables.
 *   🔐 **State Override & Audit Trails**: Human-in-the-Loop execution. Isolating a unit visually locks it offline globally while writing an immutable compliance log to MongoDB.
 
+
 ## 🧪 Testing & Simulation
 For evaluation and judging purposes, LuminaGrid includes built-in developer triggers to simulate real-world grid anomalies:
 - **`Shift + W`**: Triggers a simulated Weather Alert (localized rain anomaly), forcing the AI Co-Pilot to calculate a dynamic Split-Action Mitigation plan based on current telemetry.
 - **`Shift + C`**: Forcibly overrides Unit 12 to a `CRITICAL` state, simulating a catastrophic hardware failure (injecting FAULT/ERROR diagnostic codes and 0% efficiency). This proves the LKGV state persistence override and demonstrates how the AI strictly obeys the Critical Override Rule, explicitly forbidding "safe" environmental diagnoses (like low irradiation) during hardware emergencies.
+
+## 🛠️ Data Attribution & Acknowledgements
+The real-time IoT inverter telemetry simulation in LuminaGrid is driven by historical solar plant production metrics. Special thanks to the open-source data community for providing the foundational dataset:
+- **Dataset Source**: [Solar Power Generation Data (Kaggle)](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data)
 
 ## 📚 Deep Dive Architecture
 Curious about the engineering behind the LKGV state logic or the LangChain streaming pipeline?

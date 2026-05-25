@@ -41,6 +41,10 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
             prev.forEach(u => mergedMap.set(u.id, u));
             
             data.forEach((incomingUnit: InverterUnit) => {
+              // THIS IS THE CRITICAL FIX: preserve isRerouted from existing unit
+              const existingUnit = mergedMap.get(incomingUnit.id);
+              incomingUnit.isRerouted = existingUnit ? existingUnit.isRerouted : false;
+
               // 1. Check if isolated
               if (isolatedUnitsRef.current.includes(incomingUnit.id)) {
                 mergedMap.set(incomingUnit.id, { ...incomingUnit, current_power_kw: 0, status: 'Isolated' });
