@@ -32,8 +32,9 @@ LuminaGrid utilizes a bifurcated execution model where real-time streaming data 
 ```mermaid
 graph TD
     A[IoT Telemetry CSV] -->|File Read| B(Node.js Streamer)
-    B -->|HTTP POST| C[Express Backend]
-    C -->|SSE Stream| D[React Frontend State]
+    B -->|HTTP POST| C[Express Monolithic Server :8080]
+    C -->|Serves Static UI /dist| D[React Frontend]
+    C -->|SSE Stream /api| D
     
     D -->|User Initiates| E{AI Analysis}
     E -->|Context + Prompt| F[LangChain / Gemini 2.5 Flash]
@@ -89,6 +90,7 @@ In evaluating the enterprise data pipeline, LuminaGrid currently implements a hi
 To transition LuminaGrid from a functional prototype to a fully deployable enterprise asset, the following architectural upgrades are planned:
 1. **IoT Protocol Migration**: Replace the Node.js CSV streamer with a native publish-subscribe message broker (e.g., **MQTT** or **Apache Kafka**) for robust, fault-tolerant telemetry ingestion from actual physical inverters.
 2. **True ADL Integration**: Implement a time-series database or cloud data warehouse (e.g., **Google BigQuery**) to construct a formal ADL. This will allow the system to train predictive machine learning models on historical weather and degradation patterns, further enhancing the AI Co-Pilot's accuracy.
+
 ## 7. Project Directory Architecture
 
 Following our zero-downtime structural refactor, LuminaGrid utilizes a strict MVC backend and a Feature/Component frontend architecture.
@@ -129,3 +131,20 @@ luminagrid/
 1. **Backend MVC**: By isolating MongoDB (`db.js`) and GoogleGenAI (`ai.js`) into the `services/` layer, our controllers are completely decoupled from external client instantiations. `server.js` is strictly an orchestrator.
 2. **Frontend Component Architecture**: Pure presentation logic (like the `UnitCard` and `MetricCard`) is decoupled into `src/components/ui`. They receive data strictly via props.
 3. **State Integrity**: To ensure the Last Known Good Value (LKGV) stream isn't broken by excessive React re-renders, the SSE `EventSource` connection is cleanly encapsulated within `useTelemetry.ts`, securely managing the `isolatedUnitsRef` injection pattern.
+
+## 8. Cloud-Native Monolithic Architecture
+
+In our transition to a production-ready environment, LuminaGrid was refactored from a multi-service local development setup into a highly optimized, cloud-native monolithic architecture, specifically tailored for deployment on Google Cloud Run.
+
+### Single Server Orchestration (Port 8080)
+To eliminate the complexity of managing separate frontend and backend microservices, LuminaGrid now serves both the Vite React application and the Express API concurrently from a single Node.js instance. Express is configured with a Catch-all route (`app.get('*')`) that routes all non-API requests to the React `index.html` file located in the statically built `/dist` directory. This allows the backend to handle `/api` requests seamlessly while simultaneously serving the client-side SPA on Port 8080.
+
+### Google Cloud Run Optimization: The Cold Start Solution
+A common failure mode when deploying to Google Cloud Run is the "Container failed to start" timeout. This occurs when an application blocks port binding while waiting for asynchronous external services (like MongoDB Atlas) to connect. 
+
+To resolve this, we engineered an asynchronous decoupling solution in `server.js`. The Express server instantaneously binds to and opens Port 8080 *before* the MongoDB connection resolves. Cloud Run immediately registers the container as healthy and active. The MongoDB connection initiates concurrently in the background and resolves shortly after, ensuring zero deployment timeouts and robust container scaling.
+
+### Relative Path API Integration
+To fully unify the frontend and backend within the monolith and guarantee seamless production operation, we transitioned the frontend `apiClient.ts` to utilize Relative Paths (e.g., `/api/telemetry/stream`). 
+
+This architectural shift eliminates the need for hardcoded local URLs or complex environment variables, natively bypassing CORS constraints and preventing Mixed Content errors in HTTPS production environments. The React frontend now inherently trusts the host origin serving it, ensuring robust, frictionless API communication regardless of the deployment URL.

@@ -11,12 +11,12 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && e.key.toLowerCase() === 'c') {
         if (!forcedCriticalRef.current.includes('Unit 12')) {
-           forcedCriticalRef.current.push('Unit 12');
+          forcedCriticalRef.current.push('Unit 12');
         }
-        setUnits(prev => prev.map(u => 
-          u.id === 'Unit 12' ? { 
-            ...u, 
-            status: 'Critical', 
+        setUnits(prev => prev.map(u =>
+          u.id === 'Unit 12' ? {
+            ...u,
+            status: 'Critical',
             current_power_kw: 0,
             efficiency: 0,
             diagnostics: { HV_DC_INPUT: 'FAULT', MPPT_LOCK: 'ERROR', GRID_SYNC: 'LOSS' }
@@ -30,8 +30,8 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
   }, []);
 
   useEffect(() => {
-    const eventSource = new EventSource('http://localhost:3000/api/telemetry/stream');
-    
+    const eventSource = new EventSource('/api/telemetry/stream');
+
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -39,7 +39,7 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
           setUnits(prev => {
             const mergedMap = new Map();
             prev.forEach(u => mergedMap.set(u.id, u));
-            
+
             data.forEach((incomingUnit: InverterUnit) => {
               // THIS IS THE CRITICAL FIX: preserve isRerouted from existing unit
               const existingUnit = mergedMap.get(incomingUnit.id);
@@ -50,12 +50,12 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
                 mergedMap.set(incomingUnit.id, { ...incomingUnit, current_power_kw: 0, status: 'Isolated' });
                 return;
               }
-              
+
               // Developer override persistence
               if (forcedCriticalRef.current.includes(incomingUnit.id)) {
-                mergedMap.set(incomingUnit.id, { 
-                  ...incomingUnit, 
-                  current_power_kw: 0, 
+                mergedMap.set(incomingUnit.id, {
+                  ...incomingUnit,
+                  current_power_kw: 0,
                   status: 'Critical',
                   efficiency: 0,
                   diagnostics: { HV_DC_INPUT: 'FAULT', MPPT_LOCK: 'ERROR', GRID_SYNC: 'LOSS' }
@@ -71,14 +71,14 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
                   return;
                 }
               }
-              
+
               if (reroutedUnitsRef.current.includes(incomingUnit.id)) {
                 incomingUnit.isRerouted = true;
               }
-              
+
               mergedMap.set(incomingUnit.id, incomingUnit);
             });
-            
+
             return Array.from(mergedMap.values());
           });
           setLastUpdated(new Date().toLocaleTimeString());
@@ -87,11 +87,11 @@ export const useTelemetry = (isolatedUnitsRef: MutableRefObject<string[]>, rerou
         console.error("Error parsing telemetry stream:", e);
       }
     };
-    
+
     eventSource.onerror = (err) => {
       console.error("🔴 [SSE] Connection Error:", err);
     };
-    
+
     return () => eventSource.close();
   }, [isolatedUnitsRef, reroutedUnitsRef]);
 
