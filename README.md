@@ -54,7 +54,7 @@ To run LuminaGrid on your local machine:
 
 **1. Clone & Install**
 ```bash
-git clone https://github.com/yourusername/luminagrid.git
+git clone https://github.com/frddyy/lumina-grid.git
 cd luminagrid
 npm install
 ```
